@@ -1,0 +1,122 @@
+version: "3.7"
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  esdata:
+    driver: local
+
+services:
+  ### PostgreSQL ###########################################
+  postgres:
+    build: 
+      context: ./postgres
+      shm_size: 256mb
+    command: postgres -c 'max_connections=1500' -c 'shared_buffers=150MB'
+    shm_size: 1gb
+    volumes:
+      - ~/.go-hma-parser/data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - backend
+    restart: on-failure
+
+  ### Parser ###########################################
+  parser:
+    build:
+      context: ./parser
+      args:
+        - COMMIT=${PARSER_COMMIT}
+    networks:
+      - backend
+    restart: on-failure
+    environment:
+      - ELASTIC_URL=${PARSER_ELASTIC_URL}
+      - TOR_PROXY_URL=${PARSER_TOR_PROXY_URL}
+      - TOR_CONTROL_URL=${PARSER_TOR_CONTROL_URL}
+      - POSTGRES_HOST=${PARSER_POSTGRES_HOST}
+      - POSTGRES_PORT=${PARSER_POSTGRES_PORT}
+      - POSTGRES_DB=${PARSER_POSTGRES_DB}
+      - POSTGRES_USR=${PARSER_POSTGRES_USR}
+      - POSTGRES_PWD=${PARSER_POSTGRES_PWD}
+      - COUNT_LIST_BAND_GORUTINES=${PARSER_COUNT_LIST_BAND_GORUTINES}
+      - PARSE_LAST_BAND_UPDATE_PERIOD_MINUTES=${PARSER_PARSE_LAST_BAND_UPDATE_PERIOD_MINUTES}
+      - PARSE_UPCOMING_ALBUMS_PERIOD_MINUTES=${PARSER_PARSE_UPCOMING_ALBUMS_PERIOD_MINUTES}
+    depends_on:
+      - tor
+      - elasticsearch
+      - postgres
+
+  ### Api ###########################################
+  api:
+    build:
+      context: ./api
+      args:
+        - COMMIT=${API_COMMIT}
+    environment:
+      - ELASTIC_URL=${API_ELASTIC_URL}
+      - POSTGRES_HOST=${API_POSTGRES_HOST}
+      - POSTGRES_PORT=${API_POSTGRES_PORT}
+      - POSTGRES_DB=${API_POSTGRES_DB}
+      - POSTGRES_USR=${API_POSTGRES_USR}
+      - POSTGRES_PWD=${API_POSTGRES_PWD}
+      - APP_HOST=${API_APP_HOST}
+    networks:
+      - backend
+    restart: on-failure
+    ports:
+      - "1323:1323"
+    depends_on:
+      - elasticsearch
+      - postgres
+
+  ### Tor ###########################################
+  tor:
+    build: ./tor
+    ports:
+      - 9050:9050
+      - 9051:9051
+    volumes:
+      - ./tor/torrc:/etc/tor/torrc:ro
+    networks:
+      - backend
+    restart: on-failure
+
+  ### Elasticsearch ###########################################
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.3.0
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - backend
+    restart: on-failure
+
+  ### Kibana ###########################################
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.3.0
+    ports:
+      - "5601:5601"
+    networks:
+      - backend
+    restart: on-failure
+    depends_on:
+      - elasticsearch
