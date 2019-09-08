@@ -116,3 +116,18 @@ services:
     restart: on-failure
     depends_on:
       - elasticsearch
+
+  ### PgAdmin ###########################################
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - ~/.go-hma-parser/data/pgadmin:/root/.pgadmin
+    ports:
+      - "${PGADMIN_PORT}:80"
+    networks:
+      - backend
+    restart: unless-stopped
