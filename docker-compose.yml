@@ -64,6 +64,7 @@ services:
       - POSTGRES_USR=${API_POSTGRES_USR}
       - POSTGRES_PWD=${API_POSTGRES_PWD}
       - APP_HOST=${API_APP_HOST}
+      - YOUTUBE_KEY=${API_YOUTUBE_KEY}
     networks:
       - backend
     restart: on-failure
