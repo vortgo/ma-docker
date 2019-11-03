@@ -14,7 +14,7 @@ RUN go build -o main .
 # final stage
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /main ./
+COPY --from=builder /app/main ./
 RUN chmod +x ./main
 ENTRYPOINT ["./main"]
 EXPOSE 1323
