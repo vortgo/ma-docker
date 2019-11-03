@@ -1,4 +1,4 @@
-FROM golang:1.12.0-alpine3.9
+FROM golang:1.12.0-alpine3.9 AS builder
 
 RUN mkdir /app
 WORKDIR /app
@@ -11,4 +11,9 @@ RUN git checkout ${COMMIT}
 RUN go mod download
 RUN go build -o main .
 
-CMD ["/app/main"]
+# final stage
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /main ./
+RUN chmod +x ./main
+ENTRYPOINT ["./main"]
