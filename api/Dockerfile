@@ -16,6 +16,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/main ./
 COPY --from=builder /app/templates ./templates
+COPY --from=builder /app/assets ./assets
 RUN ls -hal
 RUN chmod +x ./main
 ENTRYPOINT ["./main"]
