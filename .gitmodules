@@ -1,0 +1,3 @@
+[submodule "applications/ma-promo"]
+	path = applications/ma-promo
+	url = https://github.com/vortgo/ma-promo

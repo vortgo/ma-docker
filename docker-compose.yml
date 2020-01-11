@@ -131,3 +131,29 @@ services:
     networks:
       - backend
     restart: unless-stopped
+
+  ### PHP-FPM ##############################################
+  php-fpm:
+    build:
+      context: ./php-fpm
+    volumes:
+      - ./applications:/var/www:cached
+    expose:
+      - "9000"
+    networks:
+      - backend
+
+  ### Nginx ##############################################
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/sites:/etc/nginx/sites-available
+      - ./applications:/var/www:cached
+    links:
+      - php-fpm
+    networks:
+      - backend
