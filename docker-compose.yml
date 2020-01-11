@@ -153,7 +153,22 @@ services:
     volumes:
       - ./nginx/sites:/etc/nginx/sites-available
       - ./applications:/var/www:cached
+      - ./common-conf/letsencrypt:/var/www/letsencrypt
+      - ./data/certbot/certs:/etc/nginx/ssl/
     links:
       - php-fpm
+    networks:
+      - backend
+      
+### Certbot #########################################
+  certbot:
+    build:
+      context: ./certbot
+    volumes:
+      - ./data/certbot/certs:/var/certs
+      - ./common-conf/letsencrypt:/var/www/letsencrypt
+    environment:
+      - CN=metallibrary.ga
+      - EMAIL=vortgo@gmail.com
     networks:
       - backend
