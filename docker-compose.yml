@@ -16,6 +16,7 @@ services:
       - ~/.go-hma-parser/data/postgres:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
+      # - "5432:5432"
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -46,7 +47,6 @@ services:
       - PARSE_LAST_BAND_UPDATE_PERIOD_MINUTES=${PARSER_PARSE_LAST_BAND_UPDATE_PERIOD_MINUTES}
       - PARSE_UPCOMING_ALBUMS_PERIOD_MINUTES=${PARSER_PARSE_UPCOMING_ALBUMS_PERIOD_MINUTES}
     depends_on:
-      - tor
       - elasticsearch
       - postgres
 
@@ -75,16 +75,16 @@ services:
       - postgres
 
   ### Tor ###########################################
-  tor:
-    build: ./tor
-    ports:
-      - 9050:9050
-      - 9051:9051
-    volumes:
-      - ./tor/torrc:/etc/tor/torrc:ro
-    networks:
-      - backend
-    restart: on-failure
+  # tor:
+  #   build: ./tor
+  #   ports:
+  #     - 9050:9050
+  #     - 9051:9051
+  #   volumes:
+  #     - ./tor/torrc:/etc/tor/torrc:ro
+  #   networks:
+  #     - backend
+  #   restart: on-failure
 
   ### Elasticsearch ###########################################
   elasticsearch:
@@ -103,6 +103,8 @@ services:
     ports:
       - "127.0.0.1:9200:9200"
       - "127.0.0.1:9300:9300"
+      # - "9200:9200"
+      # - "9300:9300"
     networks:
       - backend
     restart: on-failure
@@ -111,7 +113,8 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:7.3.0
     ports:
-      - "127.0.0.1:601:5601"
+      - "127.0.0.1:5601:5601"
+      - "5601:5601"
     networks:
       - backend
     restart: on-failure
